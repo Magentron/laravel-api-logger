@@ -35,7 +35,6 @@ the `providers` array:
 - Use Monolog or other log writers to support other destinations than file system
 - Restrict logging to specific HTTP methods and/or URI's
 - Specify HTTP status codes to log
-- Support other, non-JSON API's 
 - Write tests and gain 100% code coverage
 
 # Author

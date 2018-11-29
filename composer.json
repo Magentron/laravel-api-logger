@@ -4,8 +4,8 @@
     "type": "library",
     "keywords": ["laravel-api-logger", "laravel", "api", "logger"],
     "homepage": "https://github.com/Magentron/laravel-api-logger",
-    "time": "2018-11-28 15:55:31",
-	"version": "0.1.0-alpha",
+    "time": "2018-11-29 15:10:14",
+	"version": "0.1.1-alpha",
     "license": "GPL-3.0-or-later",
     "authors": [
         {

@@ -26,9 +26,9 @@
 
 namespace Magentron\ApiLogger\Middleware;
 
-use App;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
 class ApiLoggerMiddleware
@@ -85,11 +85,14 @@ class ApiLoggerMiddleware
     public function __construct()
     {
         $this->enabled     = config('api-logger.enabled',       true);
-        $this->filename    = config('api-logger.filename',      storage_path('log/api.log'));
+        $this->enablePt    = config('api-logger.enablePt',      !App::environment('production'));
+        $this->force       = config('api-logger.force',         false);
         $this->hidePattern = config('api-logger.hidePattern',   '/((_?token|password(_confirmation)?)=)([^&=]*)/');
         $this->rotation    = config('api-logger.rotation',      'daily');
         $this->routePrefix = config('api-logger.routePrefix',   'api.');
-        $this->start       = LARAVEL_START;
+
+        $this->filename = storage_path('logs/' . config('api-logger.filename', 'api.log'));
+        $this->start    = defined('LARAVEL_START') ? LARAVEL_START : null;
     }
 
     /**
@@ -101,13 +104,14 @@ class ApiLoggerMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $environment = App::environment();
-        $force       = config('api-logger.force', false);
+        $runningAsCli = App::runningInConsole();
 
-        // for testing do not rely on LARAVEL_START
-        $isTesting = 'testing' === $environment;
-        if ($isTesting || $force) {
-            $this->start = microtime(true);
+        // get start time if logging processing time is enabled
+        if ($this->enablePt) {
+            // if running as CLI do not rely on LARAVEL_START and do not use shutdown function
+            if ($runningAsCli || $this->force || null === $this->start) {
+                $this->start = microtime(true);
+            }
         }
 
         $response = $next($request);
@@ -121,13 +125,13 @@ class ApiLoggerMiddleware
         }
 
         if ($this->enabled) {
-            // only log processing time on non-production environments
-            if ('production' !== $environment) {
+            // log processing time
+            if ($this->enablePt) {
                 $response->header('X-ApiLogger-PT', round((microtime(true) - $this->start) * 1000));
             }
 
-            // for testing do not rely on register shutdown
-            if ($isTesting || $force) {
+            // if running as CLI do not rely on register shutdown
+            if ($runningAsCli || $this->force) {
                 $this->logRequest($request, $response);
             } else {
                 register_shutdown_function(array($this, 'logRequest'), $request, $response);

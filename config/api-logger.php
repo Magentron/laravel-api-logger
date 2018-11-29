@@ -24,16 +24,13 @@
  * with laravel-api-logger.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-$filename = env('API_LOGGER_FILENAME', storage_path('logs/api.log'));
-if ('/' !== $filename[0]) {
-    $filename = base_path($filename);
-}
-
 return [
     'enabled'       => env('API_LOGGER_ENABLED',        true),
-    'filename'      => $filename,
+    'enablePt'      => env('API_LOGGER_ENABLE_PT',      'production' !== env('APP_ENV')),
+    'filename'      => env('API_LOGGER_FILENAME',       'api.log'),
     'force'         => env('API_LOGGER_FORCE',          false),
     'hidePattern'   => env('API_LOGGER_HIDE_PATTERN',   '/((_?token|password(_confirmation)?)=)([^&=]*)/'),
     'rotation'      => env('API_LOGGER_ROTATION',       'daily'),   // possible values: single, daily, weekly, monthly, yearly
     'routePrefix'   => env('API_LOGGER_ROUTE_PREFIX',   'api.'),
+
 ];
