@@ -1,0 +1,49 @@
+{
+    "name": "magentron/laravel-api-logger",
+    "description": "Laravel API logger to log responses and requests to file.",
+    "type": "library",
+    "keywords": ["laravel-api-logger", "laravel", "api", "logger"],
+    "homepage": "https://github.com/Magentron/laravel-api-logger",
+    "time": "2018-11-28 15:55:31",
+	"version": "0.1.0-alpha",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Jeroen Derks",
+            "email": "jeroen@derks.it",
+            "homepage": "https://www.derks.it/",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "laravel/framework": "^5.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "orchestra/testbench": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Magentron\\ApiLogger\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Magentron\\ApiLogger\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Magentron\\ApiLogger\\Providers\\ServiceProvider"
+            ]
+        }
+    }
+}
