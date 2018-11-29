@@ -28,6 +28,7 @@ namespace Magentron\ApiLogger\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -230,10 +231,11 @@ class ApiLoggerMiddleware
         $statusCode  = $response->getStatusCode();
 
         // set body according to status code, only for API routes and HTTP status codes 2xx, 403
-        $body  = '<ignored>';
-        $route = $request->route();
+        $body      = '<ignored>';
+        $route     = $request->route();
+        $routeName = null === $route ? $request->getRequestUri() : ($route instanceof Route ? $route->getName() : (string) $route);
 
-        if ($route && $this->routePrefix === substr($route->getName(), 0, strlen($this->routePrefix))) {
+        if (!$this->routePrefix || ($routeName && $this->routePrefix === substr($routeName, 0, strlen($this->routePrefix)))) {
             if ('2' === substr((string) $statusCode, 0, 1) || 403 === $statusCode) {
                 $body = $response->getContent();
                 $body = '' == $body ? '-' : json_encode($body, JSON_UNESCAPED_SLASHES);
