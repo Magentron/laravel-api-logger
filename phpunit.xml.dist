@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Copyright (c) 2017-2021 Derks.IT / Jeroen Derks <jeroen@derks.it> All rights reserved.
+	Unauthorized copying of this file, via any medium is strictly prohibited.
+	Proprietary and confidential.
+
+	This file is part of laravel-api-logger.
+
+	This file is subject to the terms and conditions defined in file 'LICENSE' (also
+	available as an HTML file: 'LICENSE.html'), which is part of this source code package.
+  -->
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+		 bootstrap="vendor/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Tests">
+            <directory suffix="Test.php">./tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">./config</directory>
+            <directory suffix=".php">./src</directory>
+			<directory suffix=".php">./tests</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+		<log type="coverage-html" target="build/coverage" />
+		<log type="coverage-xml" target="build/coverage/xml" />
+    </logging>
+</phpunit>

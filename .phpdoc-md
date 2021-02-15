@@ -1,0 +1,12 @@
+<?php
+return (object)[
+    'rootNamespace' => 'Magentron\\ApiLogger', 
+    'destDirectory' => 'build/phpdoc-md',
+    'format' => 'github',
+    'classes' => [
+        '\\Magentron\\ApiLogger\\Middleware\\ApiLoggerMiddleware',
+        '\\Magentron\\ApiLogger\\Providers\\ServiceProvider',
+        '\\Magentron\\ApiLogger\\Tests\\ApiLoggerMiddlewareTest',
+        '\\Magentron\\ApiLogger\\Tests\\TestCase',
+    ],
+];

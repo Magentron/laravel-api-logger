@@ -42,11 +42,25 @@ class ApiLoggerMiddleware
     private $enabled;
 
     /**
+     * Should processing time be included in the response header?
+     * @var boolean
+     * @see config/api-logger.php
+     */
+    private $enablePt;
+
+    /**
      * Filename to log requests to.
      * @var string
      * @see config/api-logger.php
      */
     private $filename;
+
+    /**
+     * Should log if running as CLI do not rely on LARAVEL_START and do not use shutdown function?
+     * @var boolean
+     * @see config/api-logger.php
+     */
+    private $force;
 
     /**
      * Pattern to hide in POST data, default: "'/((_token|password(_confirmation)?)=)([^&=]*)/'"
@@ -79,20 +93,20 @@ class ApiLoggerMiddleware
     private $routePrefix;
 
     /**
-     * RequestsLogger constructor.
-     * Load configuration.
-     *
+     * ApiLoggerMiddleware constructor.
+     * Loads configuration.
      */
     public function __construct()
     {
-        $this->enabled     = config('api-logger.enabled',       true);
-        $this->enablePt    = config('api-logger.enablePt',      !App::environment('production'));
-        $this->force       = config('api-logger.force',         false);
-        $this->hidePattern = config('api-logger.hidePattern',   '/((_?token|password(_confirmation)?)=)([^&=]*)/');
-        $this->rotation    = config('api-logger.rotation',      'daily');
-        $this->routePrefix = config('api-logger.routePrefix',   'api.');
+        $this->enabled     = config('api-logger.enabled', true);
+        $this->enablePt    = config('api-logger.enablePt', !App::environment('production'));
+        $this->force       = config('api-logger.force', false);
+        $this->hidePattern = config('api-logger.hidePattern', '/((_?token|password(_confirmation)?)=)([^&=]*)/');
+        $this->rotation    = config('api-logger.rotation', 'daily');
+        $this->routePrefix = config('api-logger.routePrefix', 'api.');
 
-        $this->filename = storage_path('logs/' . config('api-logger.filename', 'api.log'));
+        $filename       = config('api-logger.filename', 'api.log');
+        $this->filename = '/' === substr($filename, 0, 1) ? $filename : storage_path('logs/' . $filename);
         $this->start    = defined('LARAVEL_START') ? LARAVEL_START : null;
     }
 
@@ -105,41 +119,79 @@ class ApiLoggerMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $runningAsCli = App::runningInConsole();
+        $runningAsCli = App::runningInConsole() || App::runningUnitTests();
 
-        // get start time if logging processing time is enabled
+        $this->startProcessingTime($runningAsCli);
+
+        $response = $next($request);
+
+        // do not log debugbar requests
+        if ($this->checkRouteDebugBar($request)) {
+            // @codeCoverageIgnoreStart
+            return $response;
+        }
+        // @codeCoverageIgnoreEnd
+
+        if ($this->enabled) {
+            $this->addProcessingTimeToResponse($response);
+
+            // if running as CLI do not rely on register shutdown
+            if ($runningAsCli || $this->force) {
+                $this->logRequest($request, $response);
+            } else {
+                // @codeCoverageIgnoreStart
+                register_shutdown_function(array($this, 'logRequest'), $request, $response);
+                // @codeCoverageIgnoreEnd
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * Set start time if logging process time is enabled.
+     *
+     * @param boolean $runningAsCli
+     */
+    protected function startProcessingTime($runningAsCli)
+    {
         if ($this->enablePt) {
             // if running as CLI do not rely on LARAVEL_START and do not use shutdown function
             if ($runningAsCli || $this->force || null === $this->start) {
                 $this->start = microtime(true);
             }
         }
+    }
 
-        $response = $next($request);
+    /**
+     * Add processing time to response if enabled.
+     *
+     * @param Response $response
+     */
+    protected function addProcessingTimeToResponse(Response $response)
+    {
+        // log processing time
+        if ($this->enablePt) {
+            $response->header('X-ApiLogger-PT', round((microtime(true) - $this->start) * 1000));
+        }
+    }
 
-        // do not log debugbar requests
+    /**
+     * @param  Request  $request
+     * @return boolean
+     */
+    protected function checkRouteDebugBar(Request $request)
+    {
         if (config('debugbar.enabled')) {
+            // @codeCoverageIgnoreStart
             $currentRoute = $request->route();
             if ($currentRoute && 'debugbar.' === substr($currentRoute->getName(), 0, 9)) {
-                return $response;
+                return true;
             }
         }
+        // @codeCoverageIgnoreEnd
 
-        if ($this->enabled) {
-            // log processing time
-            if ($this->enablePt) {
-                $response->header('X-ApiLogger-PT', round((microtime(true) - $this->start) * 1000));
-            }
-
-            // if running as CLI do not rely on register shutdown
-            if ($runningAsCli || $this->force) {
-                $this->logRequest($request, $response);
-            } else {
-                register_shutdown_function(array($this, 'logRequest'), $request, $response);
-            }
-        }
-
-        return $response;
+        return false;
     }
 
     /**
@@ -176,8 +228,7 @@ class ApiLoggerMiddleware
     {
         $filename = $this->filename;
         $postfix  = $this->getFilenamePostfix($time);
-        if (false !== $postfix)
-        {
+        if (false !== $postfix) {
             $basename = basename($filename);
             $position = strrpos($basename, '.');
             if (false === $position) {
@@ -200,12 +251,19 @@ class ApiLoggerMiddleware
     {
         $postfix = false;
 
-        switch ($this->rotation)
-        {
-            case 'daily':   $postfix = '-' . date('Y-m-d', $time); break;
-            case 'weekly':  $postfix = '-' . date('Y-\wW', $time); break;
-            case 'monthly': $postfix = '-' . date('Y-m',   $time); break;
-            case 'yearly':  $postfix = '-' . date('Y',     $time); break;
+        switch ($this->rotation) {
+            case 'daily':
+                $postfix = '-' . date('Y-m-d', $time);
+                break;
+            case 'weekly':
+                $postfix = '-' . date('Y-\wW', $time);
+                break;
+            case 'monthly':
+                $postfix = '-' . date('Y-m', $time);
+                break;
+            case 'yearly':
+                $postfix = '-' . date('Y', $time);
+                break;
         }
 
         return $postfix;
@@ -233,9 +291,14 @@ class ApiLoggerMiddleware
         // set body according to status code, only for API routes and HTTP status codes 2xx, 403
         $body      = '<ignored>';
         $route     = $request->route();
-        $routeName = null === $route ? $request->getRequestUri() : ($route instanceof Route ? $route->getName() : (string) $route);
+        $routeName = null === $route
+                        ? $request->getRequestUri()
+                        : ($route instanceof Route ? $route->getName() : (string) $route);
 
-        if (!$this->routePrefix || ($routeName && $this->routePrefix === substr($routeName, 0, strlen($this->routePrefix)))) {
+        $matchesPrefix = !$this->routePrefix ||
+                         ($routeName && $this->routePrefix === substr($routeName, 0, strlen($this->routePrefix)));
+
+        if ($matchesPrefix) {
             if ('2' === substr((string) $statusCode, 0, 1) || 403 === $statusCode) {
                 $body = $response->getContent();
                 $body = '' == $body ? '-' : json_encode($body, JSON_UNESCAPED_SLASHES);
@@ -244,14 +307,18 @@ class ApiLoggerMiddleware
 
         // remove sensitive information from POST data
         if ($this->hidePattern) {
-            $content = preg_replace($this->hidePattern, '$1******', $content  );
+            $content = preg_replace($this->hidePattern, '$1******', $content);
         }
 
         // prepare data to log
-        $user = $request->user();
+        $user       = $request->user();
+        $remoteUser = $user
+                        ? (isset($user->username) ? $user->username : $user->email)
+                        : (isset($_SERVER['REMOTE_USER']) ? "http:\"{$_SERVER['REMOTE_USER']}\"" : '-');
+
         $data = [
             'remote_addr'    => $request->ip() ?: '-',
-            'remote_user'    => $user ? (isset($user->username) ? $user->username : $user->email) : (isset($_SERVER['REMOTE_USER']) ? "http:\"{$_SERVER['REMOTE_USER']}\"" : '-'),
+            'remote_user'    => $remoteUser,
             'date'           => "[{$date}]",
             'request'        => "\"{$method} {$uri} {$httpVersion}\"",
             'status'         => $statusCode,

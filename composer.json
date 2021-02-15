@@ -4,8 +4,6 @@
     "type": "library",
     "keywords": ["laravel-api-logger", "laravel", "api", "logger"],
     "homepage": "https://github.com/Magentron/laravel-api-logger",
-    "time": "2018-11-29 15:10:14",
-	"version": "0.1.2-alpha",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
@@ -17,11 +15,20 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "laravel/framework": "^5.4"
+        "ext-json": "*",
+        "laravel/framework": "^5.4|^6.20.14|^7|^8"
     },
     "require-dev": {
-        "phpunit/phpunit": "*",
-        "orchestra/testbench": "*"
+        "php": "^5.6|^7|^8",
+        "clean/phpdoc-md": "9999999-dev",
+        "friendsofphp/php-cs-fixer": "9999999-dev",
+        "orchestra/testbench": "^3.4.x-dev",
+        "phploc/phploc": "^4.0",
+        "phpmd/phpmd": "9999999-dev",
+        "phpunit/phpunit": "^5.7",
+        "sebastian/phpcpd": "^3.0",
+        "squizlabs/php_codesniffer": "^3.x-dev",
+        "theseer/phpdox": "^0.11.2"
     },
     "autoload": {
         "psr-4": {
