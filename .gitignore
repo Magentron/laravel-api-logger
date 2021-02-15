@@ -1,3 +1,7 @@
+.phpunit.result.cache
+.profile
+.tmp
 /build/
+composer.lock
 /storage/
 /vendor/
