@@ -15,7 +15,7 @@
 
 IODIRNAME=Laravel-API-Logger
 OS:=$(shell uname -s)
-NPROCS:=$(shell [ Darwin = $(OS) ] && sysctl -n hw.ncpu || nproc)
+NPROCS:=$(shell [ Darwin = $(OS) ] && sysctl -n hw.ncpu || nproc --all || getconf _NPROCESSORS_ONLN)
 PHP_SRC=src
 PHP_SRC_TEST=config $(PHP_SRC) tests
 SRC=$(PHP_SRC_TEST)

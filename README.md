@@ -1,9 +1,6 @@
 # Laravel API Logger
 
-[![Laravel 5.7](https://img.shields.io/badge/Laravel-5.7-green.svg)](https://github.com/laravel/framework/tree/5.7)
-[![Laravel 5.6](https://img.shields.io/badge/Laravel-5.6-green.svg)](https://github.com/laravel/framework/tree/5.6)
-[![Laravel 5.5](https://img.shields.io/badge/Laravel-5.5-green.svg)](https://github.com/laravel/framework/tree/5.5)
-[![Laravel 5.4](https://img.shields.io/badge/Laravel-5.4-green.svg)](https://github.com/laravel/framework/tree/5.4)
+[![Laravel 6.10.12+](https://img.shields.io/badge/Laravel-6+-green.svg)](https://github.com/laravel/framework/)
 
 [Laravel](https://laravel.com/) component to log API requests and responses to file.
 

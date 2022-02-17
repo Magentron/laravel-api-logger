@@ -16,10 +16,10 @@
     "minimum-stability": "dev",
     "require": {
         "ext-json": "*",
-        "laravel/framework": "^5.4|^6.20.14|^7|^8"
+        "laravel/framework": "^6.20.12|^7|^8|^9"
     },
     "require-dev": {
-        "php": "^5.6|^7|^8",
+        "php": "^7.2.5|^8",
         "clean/phpdoc-md": "9999999-dev",
         "friendsofphp/php-cs-fixer": "9999999-dev",
         "orchestra/testbench": "^3.4.x-dev",
